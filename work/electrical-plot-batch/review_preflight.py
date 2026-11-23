@@ -124,6 +124,221 @@ def check_copy_jobs(design, symbols):
     return count
 
 
+def inside_space(point, boundary):
+    """Ray crossing on a room's accessible floor polygon, in floor-local coordinates."""
+    x, y = point
+    if len(boundary) < 3:
+        raise ValueError("操作空间缺少实测边界")
+    inside = False
+    for (ax, ay), (bx, by) in zip(boundary, boundary[1:] + boundary[:1]):
+        if (ay > y) != (by > y) and x < (bx - ax) * (y - ay) / (by - ay) + ax:
+            inside = not inside
+    return inside
+
+
+def select_switch_site(floor, intent):
+    """Select on surveyed clear spans only. Return the floor-local panel centre and facing."""
+    rooms = floor["spaces"]
+    route = intent["route"]
+    role = intent["role"]
+    access = floor["access"][intent["access"]]
+    target = access["point"]
+    if not route or len(set(route)) != len(route) or any(r not in rooms for r in route):
+        raise ValueError("进出动线有歧义")
+    if not all(rooms[r]["use"] for r in route):
+        raise ValueError("沿途空间用途未识别")
+    passages = [a["between"] for a in floor["access"].values() if "between" in a]
+    for a, b in zip(route, route[1:]):
+        if not any(set(pair) == {a, b} for pair in passages):
+            raise ValueError("动线相邻空间缺少实际出入口")
+    if role == "bedside":
+        if access.get("kind") != "cabinet" or access["space"] != route[-1] or rooms[route[-1]]["use"] != "bedroom":
+            raise ValueError("床头点未对应本卧室床头柜")
+        operating = route[-1]
+    else:
+        if role not in {"entry", "shared"} or len(route) < 2:
+            raise ValueError("门口点缺少进入前后的空间")
+        if set(access.get("between", [])) != set(route[-2:]) or access.get("kind") not in {"door", "passage", "landing", "hatch"}:
+            raise ValueError("候选门或敞开入口与进入动线不符")
+        if [route[-2], intent["access"]] not in rooms[route[-1]]["entries"]:
+            raise ValueError("该处不是从来向进入目标空间的日常操作入口")
+        operating = route[-2] if rooms[route[-1]]["use"] == "bathroom" else route[-1]
+        if role == "shared":
+            operating = intent["operateIn"]
+            if operating not in route[-2:] or not intent.get("reason"):
+                raise ValueError("集中分控缺少邻近共用操作区或使用依据")
+        if (rooms[route[-1]]["use"] == "bathroom" or role == "shared") and not rooms[operating]["dry"]:
+            raise ValueError("卫生间或共用控制位置须在干区")
+        if rooms[route[-1]]["use"] == "bathroom" and operating == route[-1]:
+            raise ValueError("卫生间开关应在其入口外")
+
+    width = intent["width"]
+    if not math.isfinite(width) or width <= 0:
+        raise ValueError("缺少面板实际宽度")
+    candidates = []
+    for face in floor["spans"]:
+        if intent["access"] not in face["at"] or face["space"] != operating or not face["wall"]:
+            continue
+        start, end = face["ends"]
+        length = math.dist(start, end)
+        if length < width:
+            continue
+        tx, ty = ((b - a) / length for a, b in zip(start, end))
+        offset = (target[0] - start[0]) * tx + (target[1] - start[1]) * ty
+        offset = max(width / 2, min(length - width / 2, offset))
+        p = [start[0] + tx * offset, start[1] + ty * offset]
+        # Probe the operating side at the centre and ends of the actual panel footprint.
+        sides = []
+        for nx, ny in [(-ty, tx), (ty, -tx)]:
+            probes = [[p[0]+tx*d+nx, p[1]+ty*d+ny] for d in (-width/2, 0, width/2)]
+            if all(inside_space(q, rooms[operating]["boundary"]) for q in probes):
+                sides.append(math.atan2(ny, nx))
+        if len(sides) == 1:
+            candidates.append((face.get("priority", 0), math.dist(p, target), face["wall"], p, sides[0]))
+    if not candidates:
+        raise ValueError("该入口操作侧无可达且足宽的实墙，点位待定")
+    _, _, wall, p, normal = min(candidates)
+    return dict(p=p, normal=normal, wall=wall, space=operating)
+
+
+def check_switch_sites(design):
+    devices = design["devices"]
+    copy_jobs = defaultdict(list)
+    for job in design.get("jobs", []):
+        if job.get("op") == "copy":
+            copy_jobs[job.get("tag")].append(job)
+    control_targets = defaultdict(set)
+    for edge in design.get("edges", []):
+        if edge.get("role") == "control":
+            control_targets[edge["fromId"]].add(edge["toId"])
+    contexts = design.get("switchSpaces", {})
+    issues = []
+    switch_tags = set()
+    for point in design.get("pendingSwitches", []):
+        issues.append(f"{point['id']}：开关待定位，{point['reason']}")
+    for d in devices:
+        tag = f"dev-{d['sheet']}-{d['id']}"
+        copies = copy_jobs[tag]
+        if not (d["kind"] in {"SW", "SW2", "SW3", "DUAL"} or d["id"] in control_targets
+                or any(j.get("layer") == "EQUIP-开关" for j in copies)):
+            continue
+        switch_tags.add(tag)
+        try:
+            intent = d.get("switchIntent")
+            if not intent or str(d["floor"]) not in contexts:
+                raise ValueError("缺少绘图前的空间、动线与安装面依据")
+            floor = contexts[str(d["floor"])]
+            site = select_switch_site(floor, intent)
+            targets = intent["lights"]
+            if not targets or set(targets) != control_targets[d["id"]]:
+                raise ValueError("操作意图与实际受控灯具不符")
+            if any(floor["lampSpaces"][lamp] != intent["route"][-1] for lamp in targets) and intent["role"] != "shared":
+                raise ValueError("受控灯所在空间与操作用途不符")
+            if intent["role"] == "shared":
+                for lamp in targets:
+                    room = floor["lampSpaces"][lamp]
+                    if floor["spaces"][room]["use"] == "bedroom":
+                        entrances = floor["spaces"][room]["entries"]
+                        if site["space"] != room or not any(door == intent["access"] for _, door in entrances):
+                            raise ValueError("集中面板的卧室主灯键须从卧室入口直接操作")
+                    if room != site["space"] and not any(
+                        a.get("between") and set(a["between"]) == {site["space"], room}
+                        for a in floor["access"].values()
+                    ):
+                        raise ValueError("集中控制灯组与操作区缺少直接通行关系")
+            if not (math.dist(d["p"][:2], site["p"]) <= .25 and math.cos(d["normal"] - site["normal"]) > .99999):
+                raise ValueError("实际点位或朝向偏离该入口合格墙面")
+            world = [x + offset for x, offset in zip(site["p"], floor["sheetOrigins"][d["sheet"]])]
+            if len(copies) != 1 or not math.dist(copies[0]["p"][:2], world) <= .25:
+                raise ValueError("实际开关插块指令与选点结果不一致")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            issues.append(f"{d['sheet']} {d['id']} {d.get('room','')}：{exc}")
+    for tag, jobs in copy_jobs.items():
+        if tag not in switch_tags and any(j.get("layer") == "EQUIP-开关" and
+                                         (not tag or str(tag).startswith("dev-")) for j in jobs):
+            issues.append(f"{tag or '未编号'}：开关插块缺少对应操作点")
+    if issues:
+        raise ValueError("\n".join(issues))
+
+
+def on_segment(p, ends):
+    a, b = ends
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    if length == 0:
+        return False
+    t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length**2
+    return 0 <= t <= 1 and math.dist(p[:2], [a[0] + t * dx, a[1] + t * dy]) <= 0.5
+
+
+def outdoor_mount_kind(point, survey):
+    """Use surveyed support at the actual anchor, in floor-local millimetres."""
+    for face in survey.get("walls", []):
+        if face.get("source") and on_segment(point, face["ends"]):
+            return "wall"
+    for slab in survey.get("slabs", []):
+        if not slab.get("source"):
+            continue
+        outlines = [slab["boundary"], *slab.get("holes", [])]
+        if any(on_segment(point, (a, b)) for ring in outlines
+               for a, b in zip(ring, ring[1:] + ring[:1])):
+            continue
+        if inside_space(point, outlines[0]) and not any(inside_space(point, hole) for hole in outlines[1:]):
+            return "ceiling"
+    return None
+
+
+def check_light_coverage(design):
+    """Check expected usable zones surveyed from the base plan against actual fixture centres."""
+    lamps = defaultdict(list)
+    for d in design["devices"]:
+        if d["kind"] in {"LIGHT", "WETLIGHT", "WALLLIGHT"}:
+            lamps[d["sheet"]].append(d)
+    issues = []
+    for sheet in design["sheets"]:
+        if sheet["kind"] != "lighting":
+            continue
+        number = sheet["number"]
+        zones = design.get("lightingZones", {}).get(number)
+        if not zones:
+            issues.append(f"{number} 缺少由建筑底图独立识别的应照明区域")
+            continue
+        counted = set()
+        for zone in zones:
+            boundary = zone["boundary"]
+            outdoor = "outdoorMount" in zone or any(s in zone["name"] for s in ("露台", "阳台", "露天"))
+            if outdoor:
+                inside = set()
+                survey = zone.get("outdoorMount") or {}
+                for d in lamps[number]:
+                    point = d["p"][:2]
+                    within = inside_space(point, boundary)
+                    edge = any(on_segment(point, (a, b)) for a, b in zip(boundary, boundary[1:] + boundary[:1]))
+                    if not (within or edge):
+                        continue
+                    support = outdoor_mount_kind(point, survey)
+                    expected = "wall" if d["kind"] == "WALLLIGHT" else "ceiling"
+                    if support != expected:
+                        missing = "实际外墙或固定柱安装面" if expected == "wall" else "灯位正上方可安装板底"
+                        issues.append(f"{number} {zone['name']} {d['id']} 缺少{missing}依据")
+                    elif "kinds" in zone and d["kind"] not in zone["kinds"]:
+                        issues.append(f"{number} {zone['name']} {d['id']} 与选定的灯具图例不符")
+                    else:
+                        inside.add(d["id"])
+            else:
+                kinds = zone.get("kinds", ["LIGHT", "WETLIGHT"])
+                inside = {d["id"] for d in lamps[number] if d["kind"] in kinds and
+                          inside_space(d["p"][:2], boundary)}
+            minimum = zone["minimum"]
+            if type(minimum) is not int or minimum < 1 or len(inside) < minimum:
+                issues.append(f"{number} {zone['name']} 应布 {minimum} 盏，实有 {len(inside)} 盏")
+            if counted & inside:
+                issues.append(f"{number} {zone['name']} 与其他区域重复计灯，请核对边界")
+            counted.update(inside)
+    if issues:
+        raise ValueError("\n".join(issues))
+
+
 def package_preflight(design_path, cache_path, required_floors, camera_floors, widths):
     design = read(design_path)
     if "priorHash" in design or "edits" in design:
@@ -143,6 +358,14 @@ def package_preflight(design_path, cache_path, required_floors, camera_floors, w
         issues.append(str(exc))
     try:
         check_pages(design, required_floors, camera_floors)
+    except ValueError as exc:
+        issues.append(str(exc))
+    try:
+        check_switch_sites(design)
+    except ValueError as exc:
+        issues.append(str(exc))
+    try:
+        check_light_coverage(design)
     except ValueError as exc:
         issues.append(str(exc))
     count = 0
