@@ -1,0 +1,22 @@
+{
+  "revision": "V09",
+  "assets": {
+    "front-directory-notes.dwg": {
+      "source": "用户指定的 04-邵阳市清水村申府-电施.dwg（V06 核对副本）",
+      "sha256": "675cbbb47cef499fca9db51ed7b45a1a4e7c94796bb54fb7f3e29ee19568a709",
+      "pages": [
+        {"role": "directory", "name": "图纸目录", "frameHandle": "1E7B3E"},
+        {"role": "notes", "name": "电气设计说明一", "frameHandle": "1E7B43"},
+        {"role": "notes", "name": "电气设计说明二", "frameHandle": "1E7B46"}
+      ]
+    },
+    "front-systems.dwg": {
+      "source": "清水村申府-电气设计-V05-照明直连-审核稿.dwg",
+      "sha256": "d46fcf87fdba9a3b8f65bcea6fff78c4656aca549130b42650fb0a0e69330d6e",
+      "pages": [
+        {"role": "distribution", "name": "配电系统图一", "frameHandle": "481"},
+        {"role": "general_system", "name": "配电系统图二", "frameHandle": "487", "anchors": {"4D3A": "局部总等电位", "4EC3": "总等电位"}, "excludedModelLayers": ["WIRE-母线"]}
+      ]
+    }
+  }
+}

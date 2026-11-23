@@ -1,0 +1,3 @@
+interface:
+  display_name: "电气DWG样板与出图"
+  short_description: "按用户电气样板复用天正图名、图例说明、图框排列及后台原生DWG出图规则"

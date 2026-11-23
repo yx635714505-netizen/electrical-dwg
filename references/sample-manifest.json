@@ -1,0 +1,298 @@
+{
+  "source": "D:\\协同文件夹\\方圆华筑\\设计\\设计区\\69-邵东一诺别墅\\02-邵东市清水村申府\\电气\\04-邵阳市清水村申府-电施.dwg",
+  "sourceSha256": "675cbbb47cef499fca9db51ed7b45a1a4e7c94796bb54fb7f3e29ee19568a709",
+  "sourceLtscale": 1000,
+  "title": {
+    "sourceHandle": "1F4BE2",
+    "type": "TCH_DRAWINGNAME",
+    "height": 7,
+    "ratioHeight": 5,
+    "spacing": 0.6,
+    "width": 0.7,
+    "scale": 100,
+    "titleStyle": "-宋体",
+    "ratioStyle": "宋体",
+    "nationalStyleCode": 4,
+    "showScale": true
+  },
+  "legend": {
+    "sourceInsertHandle": "2214A8",
+    "sourceBlock": "A$C5A077649",
+    "size": [
+      15496.03225414641,
+      7910
+    ],
+    "upperTableOffsetX": 2592.5,
+    "upperRowHeight": 630,
+    "lowerRowHeight": 700,
+    "roofExposedLinetype": "TG_×",
+    "roofConcealedLinetype": "Continuous",
+    "groundLinetype": "TG_E",
+    "sourceGroundEntityLtscale": 0.5,
+    "sourceRoofEntityLtscale": 1,
+    "planWidth": 35,
+    "upperOuterWidth": 45,
+    "lowerOuterWidth": 50
+  },
+  "sheetArrangement": {
+    "direction": "top-to-bottom",
+    "columns": 1,
+    "alignment": "left",
+    "verticalOuterFrameGap": 0,
+    "observedWidth": 46200,
+    "observedHeight": 32670,
+    "sheets": [
+      {
+        "frameHandle": "1E7B3E",
+        "name": "图纸目录",
+        "kind": "directory",
+        "floor": 0,
+        "number": "电施-00",
+        "bbox": [
+          [
+            13959489.794733321,
+            -506242.1448519759,
+            0
+          ],
+          [
+            14005689.794733321,
+            -473572.1448519759,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1E7B43",
+        "name": "电气设计说明一",
+        "kind": "notes",
+        "floor": 0,
+        "number": "电施-01",
+        "bbox": [
+          [
+            13959489.794733321,
+            -538912.144851976,
+            0
+          ],
+          [
+            14005689.794733321,
+            -506242.1448519759,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1E7B46",
+        "name": "电气设计说明二",
+        "kind": "notes",
+        "floor": 0,
+        "number": "电施-02",
+        "bbox": [
+          [
+            13959489.794733321,
+            -571582.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -538912.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1E7B49",
+        "name": "配电系统图一",
+        "kind": "system",
+        "floor": 0,
+        "number": "电施-03",
+        "bbox": [
+          [
+            13959489.794733321,
+            -604252.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -571582.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1E7B4C",
+        "name": "配电系统图二",
+        "kind": "system",
+        "floor": 0,
+        "number": "电施-04",
+        "bbox": [
+          [
+            13959489.794733321,
+            -636922.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -604252.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1ECEA1",
+        "name": "一层照明平面图",
+        "kind": "lighting",
+        "floor": 1,
+        "number": "电施-05",
+        "bbox": [
+          [
+            13959489.794733321,
+            -669592.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -636922.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1ECEA4",
+        "name": "二层照明平面图",
+        "kind": "lighting",
+        "floor": 2,
+        "number": "电施-06",
+        "bbox": [
+          [
+            13959489.794733321,
+            -702262.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -669592.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1ECEA7",
+        "name": "阁楼层照明平面图",
+        "kind": "lighting",
+        "floor": 3,
+        "number": "电施-07",
+        "bbox": [
+          [
+            13959489.794733321,
+            -734932.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -702262.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1ECEAA",
+        "name": "一层弱电平面图",
+        "kind": "weak",
+        "floor": 1,
+        "number": "电施-08",
+        "bbox": [
+          [
+            13959489.794733321,
+            -767602.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -734932.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1ECEAD",
+        "name": "二层弱电平面图",
+        "kind": "weak",
+        "floor": 2,
+        "number": "电施-09",
+        "bbox": [
+          [
+            13959489.794733321,
+            -800272.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -767602.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1FC27A",
+        "name": "防雷平面图",
+        "kind": "roof",
+        "floor": 0,
+        "number": "电施-10",
+        "bbox": [
+          [
+            13959489.794733321,
+            -832942.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -800272.1448519761,
+            0
+          ]
+        ]
+      },
+      {
+        "frameHandle": "1FECDD",
+        "name": "基础接地平面图",
+        "kind": "ground",
+        "floor": 0,
+        "number": "电施-11",
+        "bbox": [
+          [
+            13959489.794733321,
+            -865612.1448519761,
+            0
+          ],
+          [
+            14005689.794733321,
+            -832942.1448519761,
+            0
+          ]
+        ]
+      }
+    ]
+  },
+  "assets": [
+    {
+      "file": "lightning-grounding-legend.dwg",
+      "sourceHandle": "2214A8",
+      "native": 50,
+      "proxy": 0,
+      "sha256": "f83f379a64aaf9e383c0c61327bb33f8b593c62098b6170031ac9966208334aa"
+    },
+    {
+      "file": "title-1-100.dwg",
+      "sourceHandle": "1F4BE2",
+      "native": 1,
+      "proxy": 0,
+      "sha256": "57dd1365e5dcd81759593aa9479cd291a1c8a02015157cc49960a6533c82e804"
+    },
+    {
+      "file": "lightning-notes-source.dwg",
+      "sourceHandle": "218B61",
+      "native": 1,
+      "proxy": 0,
+      "sha256": "efe0e054441f7d84ced02529f3645cabf2905c3f607430f46881eb1051b1a95a"
+    }
+  ]
+}
