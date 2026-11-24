@@ -4,11 +4,11 @@
 
 ## 服务器首次安装
 
-在服务器上为此私库配置只读 GitHub 访问。使用 SSH deploy key 时，将服务器生成的公钥加入仓库的 Deploy keys，保留默认的只读权限。以下 PowerShell 命令适用于新安装，目标目录应当为空。自定义了 Codex 技能目录时，相应替换目标路径。
+服务器可通过 HTTPS 克隆公开仓库。以下 PowerShell 命令适用于新安装，目标目录应当为空。自定义了 Codex 技能目录时，相应替换目标路径。
 
 ```powershell
 $skillDir = Join-Path $env:USERPROFILE '.codex/skills/electrical-dwg'
-git clone git@github.com:yx635714505-netizen/electrical-dwg.git $skillDir
+git clone https://github.com/yx635714505-netizen/electrical-dwg.git $skillDir
 Set-Location $skillDir
 git rev-parse --short HEAD
 ```
@@ -47,6 +47,8 @@ Copy-Item cad_pool/config.json cad_pool/config.local.json
 原件及抽取资源的来源、SHA-256 和用途见 references 目录内的三份 manifest。历史项目路径仅用于追溯。运行资源从当前克隆目录取得。
 
 ## 日后更新
+
+当前定位和验收流程见 [V36 操作说明](references/placement-pipeline.md)，后台故障排查见 [CAD 池启动与续作](docs/CAD池启动与续作排查.md)。[定位规则形成记录](docs/history/placement/) 收录 V35 草案、情景验证、两版定位规则文本及 V36 实施计划和历史进度。归档文档中的任务指令、路径、通过数和项目证据均对应当时工作区。新项目请从 [Skill 入口](SKILL.md) 读取现行规则。
 
 维护端在本仓库工作副本修改、验证、提交后执行 `git push origin main`。如果修改发生在另一份已安装的 Skill 或共用工作区，请先将对应变更同步到本仓库并检查差异。
 
