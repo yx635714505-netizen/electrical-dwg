@@ -104,6 +104,9 @@ if __name__ == "__main__":
         parser.add_argument(arg,type=Path)
     args=parser.parse_args()
     load=lambda p:json.loads(p.read_text(encoding="utf-8-sig"))
-    result=check(load(args.native),load(args.design),load(args.plan))
+    from lighting_survey import saved_errors
+    native,design,plan = map(load, (args.native,args.design,args.plan))
+    result=check(native,design,plan)
+    result["照明区域与入口"]=saved_errors(args.design,design,plan,args.native,native)
     print(json.dumps(result,ensure_ascii=False,indent=2))
     raise SystemExit(int(any(result.values())))

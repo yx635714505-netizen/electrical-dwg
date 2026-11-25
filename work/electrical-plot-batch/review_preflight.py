@@ -368,6 +368,7 @@ def package_preflight(design_path, cache_path, required_floors, camera_floors, w
         check_light_coverage(design)
     except ValueError as exc:
         issues.append(str(exc))
+    issues.extend(check_architectural_lighting(design_path, design))
     count = 0
     if symbols is not None:
         try:
@@ -388,6 +389,16 @@ def package_preflight(design_path, cache_path, required_floors, camera_floors, w
     if issues:
         raise ValueError("\n".join(issues))
     return count
+
+
+def check_architectural_lighting(path, design):
+    from lighting_survey import lamp_copy_errors, read_basis, survey_errors
+    if not any(s["kind"] == "lighting" for s in design["sheets"]):
+        return []
+    try:
+        return survey_errors(design, read_basis(path, design), design["devices"]) + lamp_copy_errors(design)
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        return [str(exc)]
 
 
 def main():
@@ -424,6 +435,9 @@ def main():
         print("弱电图楼层", check_pages(design, args.weak_floors, args.camera_floors))
         if args.mount_widths:
             check_terminal_spans(design["devices"], read(args.mount_widths))
+        issues = check_architectural_lighting(args.design, design)
+        if issues:
+            cli.exit(1, "\n".join(issues) + "\n")
 
 
 if __name__ == "__main__":
