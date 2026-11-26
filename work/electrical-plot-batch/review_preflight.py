@@ -191,7 +191,15 @@ def select_switch_site(floor, intent):
         sides = []
         for nx, ny in [(-ty, tx), (ty, -tx)]:
             probes = [[p[0]+tx*d+nx, p[1]+ty*d+ny] for d in (-width/2, 0, width/2)]
-            if all(inside_space(q, rooms[operating]["boundary"]) for q in probes):
+            boundary = access.get("approachBoundary", rooms[operating]["boundary"])
+            # The local dry-side patch also has to land inside the identified operating room.
+            if access.get("approachBoundary") and not inside_space([p[0]+70*nx,p[1]+70*ny], rooms[operating]["boundary"]):
+                continue
+            if access.get("swing") and not access.get("fallbackObstacle"):
+                from entry_and_leader import latch_side
+                if not all(latch_side(q, access["swing"]) for q in probes):
+                    continue
+            if all(inside_space(q, boundary) for q in probes):
                 sides.append(math.atan2(ny, nx))
         if len(sides) == 1:
             candidates.append((face.get("priority", 0), math.dist(p, target), face["wall"], p, sides[0]))
@@ -396,7 +404,10 @@ def check_architectural_lighting(path, design):
     if not any(s["kind"] == "lighting" for s in design["sheets"]):
         return []
     try:
-        return survey_errors(design, read_basis(path, design), design["devices"]) + lamp_copy_errors(design)
+        # Enforce current evidence on submission. Preserve historical readback on archived projects.
+        contexts = {f: dict(context, requireDoorEvidence=True) for f, context in design["switchSpaces"].items()}
+        current = dict(design, switchSpaces=contexts)
+        return survey_errors(current, read_basis(path, design), design["devices"]) + lamp_copy_errors(design)
     except (ValueError, KeyError, TypeError, OSError) as exc:
         return [str(exc)]
 
@@ -442,4 +453,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

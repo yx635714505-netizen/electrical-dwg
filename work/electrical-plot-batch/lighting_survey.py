@@ -87,6 +87,11 @@ def entry_candidate(entry, width):
     if not choices:
         raise ValueError("入口没有足宽可达墙段")
     _, _, i, p = min(choices)
+    if entry.get("doorType") == "single":
+        from entry_and_leader import latch_side
+        door = entry.get("swing", {})
+        if not door.get("leafSource") or not (latch_side(p, door) or entry.get("fallbackObstacle")):
+            raise ValueError("单扇门开关缺少门扇依据或落在铰侧")
     return entry["faces"][i], p
 
 
@@ -163,6 +168,21 @@ def entry_errors(name, entries, devices, ctx, linked):
     issues = []
     for entry in entries:
         candidates = [d for d in controls if d["switchIntent"]["route"][-2:] == entry["route"][-2:]]
+        for device in candidates:
+            access = ctx.get("access", {}).get(device["switchIntent"]["access"], {})
+            if access.get("kind") == "door" and (ctx.get("requireDoorEvidence") or entry.get("doorType")):
+                kind = entry.get("doorType")
+                if kind not in {"single", "double", "sliding", "folding", "other"}:
+                    issues.append(f"{device['id']} 门型和操作侧缺少原图依据")
+                elif kind != "single" and not entry.get("approachNote"):
+                    issues.append(f"{device['id']} 该门型缺日常通行扇或操作侧依据")
+                elif kind == "single":
+                    from entry_and_leader import latch_side
+                    door = entry.get("swing", {})
+                    if not all(door.get(k) for k in ("hinge","latch","openLeaf","leafSource")):
+                        issues.append(f"{device['id']} 缺门洞、铰侧或开启扇来源")
+                    elif not latch_side(device["p"],door) and not entry.get("fallbackObstacle"):
+                        issues.append(f"{device['id']} 实际面板位于铰侧且无执手侧遮挡依据")
         if not candidates:
             issues.append(f"开关来向错误或缺失，应从{entry['route'][-2]}进入{name}")
         elif not any(fits_entry(d, entry) for d in candidates):

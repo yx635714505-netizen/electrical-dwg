@@ -18,3 +18,5 @@
 - **实际组装**从 `work/electrical-plot-batch/lighting_survey.py` 调用 `fixture_kinds(part)` 取适用灯型，按净空与用途定灯位。调用 `entry_candidate(entry, width)` 取得入口净墙及候选点，传入 `select_switch_site` 的房间、入口与候选墙面。先确定灯组、入口，再插原生块和连接；沿用已有房间分类脚本的项目也走这一步。
 - **投图与修订**在 `sheets`、新建整套的 `package` 和最终 `verify_electrical_review.py` 检查全楼。修订若发现共用选灯或选点逻辑有误，清单逐层列出同类空间，检查各自依据、灯组与入口，改动只落在有误的位置。初次处理历史稿可从原建筑补建清单；已修截图与全套通过分别记录。
 - **最终回读**在现有 `review_basis.json` 增加 `lightingReadback.symbols`，按最终原生块定义名给出样板实测的 `kind, anchor`（块定义内安装点）和开关的 `normal, width`（块局部单位法向、块定义内安装边实宽）。句柄从同次 `clone_trace.json` 的 `dev-图号-ID` 取；差量修订可提供合并后的 `lightingReadback.handles` 对应实体句柄。结合块基点、旋转、镜像和缩放还原真实安装点与操作侧。对非块参照的原生设备按实际原生几何做等效回读并补充适配，缺证据列待核。原有逐键接线、安装边避障与逐点试打继续执行。试打局部同时看见来向、开口、面板和受控灯；长通道另看覆盖全长的平面。
+
+入口执手侧、开敞空间操作顺序、跨层符号独立定位及引注净空按[入口开关、阁楼接灯和就近引注](entry-riser-leaders.md)核对。
