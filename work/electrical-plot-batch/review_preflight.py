@@ -406,7 +406,7 @@ def check_architectural_lighting(path, design):
     try:
         # Enforce current evidence on submission. Preserve historical readback on archived projects.
         contexts = {f: dict(context, requireDoorEvidence=True) for f, context in design["switchSpaces"].items()}
-        current = dict(design, switchSpaces=contexts)
+        current = dict(design, switchSpaces=contexts, requireOpenPlanReview=True)
         return survey_errors(current, read_basis(path, design), design["devices"]) + lamp_copy_errors(design)
     except (ValueError, KeyError, TypeError, OSError) as exc:
         return [str(exc)]

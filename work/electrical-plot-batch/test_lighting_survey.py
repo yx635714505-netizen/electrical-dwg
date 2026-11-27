@@ -21,6 +21,19 @@ def entry(route, operating, source, jamb, wall, a, b, normal):
 
 
 class LightingSurveyTest(unittest.TestCase):
+    def test_open_hall_requires_light_in_each_use_area(self):
+        from lighting_survey import open_plan_errors
+        parts = [dict(name=name, source="入口及家具平面", boundary=rect(x,0,x+3000,3000), minimum=1)
+                 for name,x in [("用餐",0),("分流",3000)]]
+        floor = dict(openPlanReview="相邻的餐桌、楼梯前室", openPlanParts=parts)
+        lamp = dict(id="A",kind="LIGHT",p=[1500,1500])
+        second = dict(lamp,id="B",p=[1800,1500])
+        self.assertTrue(open_plan_errors(floor,[lamp,second]))
+        second["p"] = [4500,1500]
+        self.assertEqual(open_plan_errors(floor,[lamp,second]), [])
+        parts[1]["holes"] = [rect(4100,1300,4800,1900)]
+        self.assertTrue(open_plan_errors(floor,[lamp,second]))
+
     def test_shared_preflight_and_saved_entity_gate(self):
         from hashlib import sha256
         from tempfile import TemporaryDirectory
@@ -44,7 +57,7 @@ class LightingSurveyTest(unittest.TestCase):
             zone=dict(name="阳台",boundary=boundary,outdoorMount=dict(slabs=[dict(source="顶板A",boundary=boundary)]))
             design=dict(sheets=[sh],sources={"ar":"ar.dwg"},lightingZones={"E1":[zone]},switchSpaces={"1":ctx},
                         devices=[lamp,sw],jobs=[dict(op="copy",tag="dev-E1-L",handles=["T"],p=[1000,600])])
-            survey=dict(architectureSHA256=sha256(dwg.read_bytes()).hexdigest(),sheets={"E1":dict(areas=[area])})
+            survey=dict(architectureSHA256=sha256(dwg.read_bytes()).hexdigest(),sheets={"E1":dict(areas=[area], openPlanParts=[], openPlanReview="此页仅阳台")})
             path=folder/"lighting_survey.json"
             def bind():
                 path.write_text(json.dumps(survey),"utf8")

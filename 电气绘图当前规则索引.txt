@@ -1,5 +1,15 @@
 电气绘图当前规则入口（V35）
 
+引注按全套目录覆盖照明、弱电及两级屋面，字号和正文按 A3 净空调整，详见 references/entry-riser-leaders.md 的“弱电、防雷与照明平面的引注可读性”。
+
+楼梯、阁楼转接引注按实际两端分向就近试排，执行 references/entry-riser-leaders.md 的“楼梯和阁楼转接引注的摆放”，定稿核对原生锚点、折点及分层试打。
+
+楼梯与阁楼照明转接点各自贴实际净墙面，两端允许分置，详见 references/entry-riser-leaders.md 的“转接点贴实墙”。
+
+楼梯异标高接灯：按 references/entry-riser-leaders.md 的“楼梯平台异标高接灯”分设供电侧和平台侧，沿用原支路和控制。
+
+大开间照明按 references/lighting-survey.md 逐段调查会客、餐桌、玄关及楼梯前通行区；新组装和定稿回读均按实际灯位校核各段覆盖。
+
 入口开关、阁楼接灯与引注执行 references/entry-riser-leaders.md。逐门认执手侧，开敞空间按进入动线选择首段可用实墙；上下层接灯与平台灯分设，天正引注选邻近留白，在原生回读及试打中核对。
 
 照明布点前的建筑依据与跨层复核：按 references/lighting-survey.md 独立量取阳台顶板覆盖、过道全长与入口操作墙段。逐层复核同一选灯或选点逻辑，并按实际灯位、面板和逐键接线试打。

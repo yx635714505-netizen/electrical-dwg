@@ -226,6 +226,33 @@ def read_basis(design_path, design):
     return survey
 
 
+def open_plan_errors(floor, devices):
+    """核对建筑底图独立圈定的各使用区，设计清单及原生回读共用。"""
+    if not str(floor.get("openPlanReview") or "").strip() or not isinstance(floor.get("openPlanParts"), list):
+        return ["缺少大开间逐层调查或分段清单"]
+    issues = []
+    assigned = set()
+    names = set()
+    for part in floor["openPlanParts"]:
+        name = part["name"]
+        ring = part["boundary"]
+        minimum = part["minimum"]
+        if not name or name in names or not part.get("source") or type(minimum) is not int or minimum < 1:
+            raise ValueError("大开间分段名称、建筑依据或最低灯数无效")
+        names.add(name)
+        if len(ring) < 3:
+            raise ValueError(f"{name} 缺少建筑净空边界")
+        found = {d["id"] for d in devices if d["kind"] in LAMPS
+                 and inside(d["p"][:2], ring, edge=False)
+                 and not any(inside(d["p"][:2], hole) for hole in part.get("holes", []))}
+        if len(found) < minimum:
+            issues.append(f"{name} 应有至少{minimum}盏，本段实有{len(found)}盏")
+        if assigned.intersection(found):
+            issues.append(f"{name} 与另一使用区重复计灯")
+        assigned.update(found)
+    return issues
+
+
 def survey_errors(design, survey, devices):
     sheets = {s["number"]:s for s in design["sheets"] if s["kind"]=="lighting"}
     if set(survey["sheets"]) != set(sheets):
@@ -235,6 +262,12 @@ def survey_errors(design, survey, devices):
         floor = survey["sheets"][key]
         rows = floor["areas"]
         local = [d for d in devices if d["sheet"] == key]
+        if design.get("requireOpenPlanReview") or "openPlanParts" in floor:
+            try:
+                issues = open_plan_errors(floor, local)
+            except (KeyError, ValueError, TypeError, IndexError) as exc:
+                issues = [f"建筑分段依据无效 {exc}"]
+            errors.extend(f"{key} {issue}" for issue in issues)
         names = [a["name"] for a in rows]
         missing = required_areas(design, sheet)-set(names)
         if missing or len(names) != len(set(names)):
